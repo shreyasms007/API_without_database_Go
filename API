@@ -11,69 +11,72 @@ import (
 	"github.com/gorilla/mux"
 )
 
-type Movies struct {
-	ID       string    `json:"id"`
-	Isbn     string    `json:"isbn"`
-	Title    string    `json:"title"`
-	Director *Director `json:"director"`
+type Payload struct {
+	ID           string `json:"id"`
+	Status       string `json:"status"`
+	Items        *Items `json:"items"`
+	Total        int    `json:"total"`
+	CurrencyUnit string `json:"currency_unit"`
 }
 
-type Director struct {
-	FirstName string `json:"firstname"`
-	LastName  string `json:"lastname"`
+type Items struct {
+	Id          string `json:"id"`
+	Description string `json:"description"`
+	Price       int    `json:"price"`
+	Quantity    int    `json:"quantity"`
 }
 
-var movies []Movies
+var payload []Payload
 
-func getMovies(w http.ResponseWriter, r *http.Request) {
+func getOrders(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(movies)
+	json.NewEncoder(w).Encode(payload)
 
 }
 
-func deleteMovie(w http.ResponseWriter, r *http.Request) {
+func deleteOrder(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	params := mux.Vars(r)
-	for index, item := range movies {
+	for index, item := range payload {
 		if item.ID == params["id"] {
-			movies = append(movies[:index], movies[index+1:]...)
+			payload = append(payload[:index], payload[index+1:]...)
 			break
 		}
 	}
-	json.NewEncoder(w).Encode(movies)
+	json.NewEncoder(w).Encode(payload)
 }
 
-func getMovie(w http.ResponseWriter, r *http.Request) {
+func getOrder(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "applicaton/json")
 	params := mux.Vars(r)
-	for index, item := range movies {
+	for index, item := range payload {
 		if item.ID == params["id"] {
-			movies = append(movies[:index], movies[index+1:]...)
+			payload = append(payload[:index], payload[index+1:]...)
 			json.NewEncoder(w).Encode(item)
 
 		}
 	}
 }
 
-func createMovie(w http.ResponseWriter, r *http.Request) {
+func createOrder(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "applicaton/json")
-	var movie Movies
+	var movie Payload
 	_ = json.NewDecoder(r.Body).Decode(&movie)
 	movie.ID = strconv.Itoa(rand.Intn(1000000000))
-	movies = append(movies, movie)
+	payload = append(payload, movie)
 	json.NewEncoder(w).Encode(movie)
 }
 
-func updateMovie(w http.ResponseWriter, r *http.Request) {
+func updateOrder(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "applicaton/json")
 	params := mux.Vars(r)
-	for index, item := range movies {
+	for index, item := range payload {
 		if item.ID == params["id"] {
-			movies = append(movies[:index], movies[index+1:]...)
-			var movie Movies
+			payload = append(payload[:index], payload[index+1:]...)
+			var movie Payload
 			_ = json.NewDecoder(r.Body).Decode(&movie)
 			movie.ID = params["id"]
-			movies = append(movies, movie)
+			payload = append(payload, movie)
 			json.NewEncoder(w).Encode(movie)
 		}
 	}
@@ -84,16 +87,16 @@ func main() {
 
 	r := mux.NewRouter()
 
-	movies = append(movies, Movies{ID: "1", Isbn: "453647", Title: "KGF", Director: &Director{FirstName: "John", LastName: "Doe"}})
-	movies = append(movies, Movies{ID: "1", Isbn: "453647", Title: "Kanthara", Director: &Director{FirstName: "Steve", LastName: "Smith"}})
+	payload = append(payload, Payload{ID: "abcde-12345", Status: "ordered", Items: &Items{Id: "123456", Description: "Toy", Price: 40, Quantity: 1}, Total: 40, CurrencyUnit: "dollar"})
+	payload = append(payload, Payload{ID: "vwxyz-08976", Status: "shipped", Items: &Items{Id: "09876", Description: "Mobile", Price: 206, Quantity: 1}, Total: 206, CurrencyUnit: "dollar"})
 
-	r.HandleFunc("/movies", getMovies).Methods("GET")
-	r.HandleFunc("/movies/{id}", getMovie).Methods("GET")
-	r.HandleFunc("/movies", createMovie).Methods("POST")
-	r.HandleFunc("/movies/{id}", updateMovie).Methods("PUT")
-	r.HandleFunc("/movies/{id}", deleteMovie).Methods("DELETE")
+	r.HandleFunc("/orders", getOrders).Methods("GET")
+	r.HandleFunc("/orders/{id}", getOrder).Methods("GET")
+	r.HandleFunc("/orders", createOrder).Methods("POST")
+	r.HandleFunc("/orders/{id}", updateOrder).Methods("PUT")
+	r.HandleFunc("/orders/{id}", deleteOrder).Methods("DELETE")
 
-	fmt.Println("Server is started at port 8000")
-	log.Fatal(http.ListenAndServe(":8000", r))
+	fmt.Println("Server is started at port 8080")
+	log.Fatal(http.ListenAndServe(":8080", r))
 
 }
